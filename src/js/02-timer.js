@@ -11,10 +11,12 @@ const refs = {
   seconds: document.querySelector('span[data-seconds]'),
 };
 
+refs.startBtnRef.setAttribute('disabled', true);
+
 let intervalID = null;
 let dateSelected = null;
 
-const options = {
+flatpickr(refs.myInput, {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
@@ -29,18 +31,32 @@ const options = {
       refs.startBtnRef.removeAttribute('disabled');
     }
   },
-};
+});
 
-const pickr = flatpickr(refs.myInput, options);
+refs.startBtnRef.addEventListener('click', onStarClick);
 
-function getChosenTime() {
-  return pickr.selectedDates[0].getTime();
+function onStarClick() {
+  intervalID = setInterval(() => {
+    const delta = dateSelected - Date.now();
+    const { days, hours, minutes, seconds } = convertMs(delta);
+    refs.startBtnRef.setAttribute('disabled', true);
+    updeteClockface({ days, hours, minutes, seconds });
+
+    if (delta < 1000) {
+      clearInterval(intervalID);
+    }
+  }, 1000);
 }
 
-refs.startBtnRef.addEventListener('click', onStartBtnClick);
+function addLeadinZero(value) {
+  return String(value).padStart(2, '0');
+}
 
-function onStartBtnClick() {
-  console.log(getChosenTime());
+function updeteClockface({ days, hours, minutes, seconds }) {
+  refs.days.textContent = addLeadinZero(days);
+  refs.hours.textContent = addLeadinZero(hours);
+  refs.minutes.textContent = addLeadinZero(minutes);
+  refs.seconds.textContent = addLeadinZero(seconds);
 }
 
 function convertMs(ms) {
@@ -61,24 +77,3 @@ function convertMs(ms) {
 
   return { days, hours, minutes, seconds };
 }
-
-const fetchUserFromServer = username => {
-  return new Promise((resolve, reject) => {
-    console.log(`Fetching data for ${username}`);
-
-    setTimeout(() => {
-      // Change value of isSuccess variable to simulate request status
-      const isSuccess = true;
-
-      if (isSuccess) {
-        resolve('success value');
-      } else {
-        reject('error');
-      }
-    }, 2000);
-  });
-};
-
-fetchUserFromServer('Mango')
-  .then(user => console.log(user))
-  .catch(error => console.error(error));
